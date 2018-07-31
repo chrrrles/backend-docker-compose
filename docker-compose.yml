@@ -1,0 +1,60 @@
+version: "3"
+services:
+  app:
+    container_name: gapi
+    build: ./gapi/
+    image: gapi
+    ports:
+      - '3000:3000'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_HOST: db
+      MYSQL_DATABASE: default
+      REDIS: redis
+      ES_URL: elasticsearch:9200
+    depends_on:
+      - redis
+      - db
+      - elasticsearch
+    volumes:
+      - './:/usr/src/app'
+    links:
+      - db
+      - redis
+      - elasticsearch
+    tty: true
+    stdin_open: true
+
+  db:
+    container_name: gapi_db
+    image: mysql:5.7.19
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes: [ "mysql_db_data:/data" ]
+    ports:
+      - '3306:3306'
+
+  redis:
+    container_name: gapi_redis
+    image: redis:alpine
+    volumes: [ "redis_db_data:/data" ]
+
+  elasticsearch:
+    container_name: gapi_es
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.3.0
+    container_name: gapi_kibana
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+
+volumes:
+  mysql_db_data:
+  redis_db_data:
+
