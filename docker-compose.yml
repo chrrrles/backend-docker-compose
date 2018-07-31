@@ -1,5 +1,75 @@
 version: "3"
 services:
+  merchant-sync-worker:
+    container_name: es_worker
+    build: ./es_worker
+    image: es_worker
+    volumes:
+      - './es_worker:/usr/src/app:cached'
+    environment:
+      ES_URL: elasticsearch:9200
+    depends_on:
+      - elasticsearch
+  gini-auth:
+    container_name: gini-auth
+    build: ./gini-auth
+    image: gini-auth
+    volumes:
+      - './gini-auth:/usr/src/app:cached'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_HOST: db
+      MYSQL_DATABASE: default
+    depends_on:
+      - db
+    ports:
+      - '3001:3001'
+  cat-service:
+    container_name: cat-service
+    build: ./cat-service
+    image: cat-service
+    volumes:
+      - './cat-service:/usr/src/app:cached'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_HOST: db
+      MYSQL_DATABASE: default
+    depends_on:
+      - db
+    ports:
+      - '4000:4000'
+  ap-backend:
+    container_name: ap-backend
+    build: ./ap-backend
+    image: ap-backend
+    volumes:
+      - './ap-backend:/usr/src/app:cached'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_HOST: db
+      MYSQL_DATABASE: default
+    ports:
+      - '3031:3031'
+    depends_on:
+      - db
+  catch-duplicates-worker:
+    container_name: backend-service
+    build: ./backend-service
+    image: backend-service
+    volumes:
+      - './backend-service:/usr/src/app:cached'
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_HOST: db
+      MYSQL_DATABASE: default
+    ports:
+      - '3003:3003'
+    depends_on:
+      - db
   app:
     container_name: gapi
     build: ./gapi/
@@ -18,7 +88,7 @@ services:
       - db
       - elasticsearch
     volumes:
-      - './:/usr/src/app'
+      - './gapi:/usr/src/app:cached'
     links:
       - db
       - redis
