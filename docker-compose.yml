@@ -1,26 +1,31 @@
 version: "3"
 services:
-  merchant-sync-worker:
-    container_name: es_worker
-    build: ./es_worker
-    image: es_worker
-    volumes:
-      - './es_worker:/usr/src/app:cached'
-    environment:
-      ES_URL: elasticsearch:9200
-    depends_on:
-      - elasticsearch
+# [TODO] Need to fix connecting to the local SQS service
+#  merchant-sync-worker:
+#    container_name: es_worker
+#    build: ./es_worker
+#    image: es_worker
+#    volumes:
+#      - './es_worker:/usr/src/app:cached'
+#    env_file:
+#      - local.env
+#    depends_on:
+#      - elasticsearch
+#
+#  sqs:
+#    image: vsouza/sqs-local
+#    container_name: gapi_sqs
+#    ports:
+#      - 9324:9324
+
   gini-auth:
     container_name: gini-auth
     build: ./gini-auth
     image: gini-auth
     volumes:
       - './gini-auth:/usr/src/app:cached'
-    environment:
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root
-      MYSQL_HOST: db
-      MYSQL_DATABASE: default
+    env_file: 
+      - local.env
     depends_on:
       - db
     ports:
@@ -31,11 +36,8 @@ services:
     image: cat-service
     volumes:
       - './cat-service:/usr/src/app:cached'
-    environment:
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root
-      MYSQL_HOST: db
-      MYSQL_DATABASE: default
+    env_file:
+      - local.env
     depends_on:
       - db
     ports:
@@ -46,11 +48,8 @@ services:
     image: ap-backend
     volumes:
       - './ap-backend:/usr/src/app:cached'
-    environment:
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root
-      MYSQL_HOST: db
-      MYSQL_DATABASE: default
+    env_file:
+      - local.env
     ports:
       - '3031:3031'
     depends_on:
@@ -61,11 +60,8 @@ services:
     image: backend-service
     volumes:
       - './backend-service:/usr/src/app:cached'
-    environment:
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root
-      MYSQL_HOST: db
-      MYSQL_DATABASE: default
+    env_file:
+      - local.env
     ports:
       - '3003:3003'
     depends_on:
@@ -76,13 +72,8 @@ services:
     image: gapi
     ports:
       - '3000:3000'
-    environment:
-      MYSQL_USERNAME: root
-      MYSQL_PASSWORD: root
-      MYSQL_HOST: db
-      MYSQL_DATABASE: default
-      REDIS: redis
-      ES_URL: elasticsearch:9200
+    env_file:
+      - ./local.env
     depends_on:
       - redis
       - db
@@ -99,8 +90,6 @@ services:
   db:
     container_name: gapi_db
     image: mysql:5.7.19
-    environment:
-      MYSQL_ROOT_PASSWORD: root
     volumes: [ "mysql_db_data:/data" ]
     ports:
       - '3306:3306'
@@ -109,6 +98,8 @@ services:
     container_name: gapi_redis
     image: redis:alpine
     volumes: [ "redis_db_data:/data" ]
+    ports:
+      - '6379:6379'
 
   elasticsearch:
     container_name: gapi_es
@@ -123,7 +114,6 @@ services:
       - elasticsearch
     ports:
       - "5601:5601"
-
 volumes:
   mysql_db_data:
   redis_db_data:
